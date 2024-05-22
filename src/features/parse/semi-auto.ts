@@ -7,14 +7,6 @@ import {
 import { ParsedResult } from "chrono-node";
 import { PluginSettings } from "~/settings/types";
 
-const clean_schedule = (content: string): string => {
-  // check the second line and remove it if it is a schedule
-  // SCHEDULED: <2021-09-01 Wed>
-  // DEADLINE: <2021-09-01 Wed>
-  // use regex to match the line starting with SCHEDULED or DEADLINE, including the line break
-  const regex = /SCHEDULED:\s<.*\n?|DEADLINE:\s<.*\n?/
-  return content.replace(regex, "");
-}
 
 
 const insert_at_second_line = (content: string, str: string): string => {
@@ -38,8 +30,6 @@ export const semiAutoParse = (
   const backticksRx = /`(.*?)`/g;
   if (backticksRx.exec(content)) return "";
   
-  // remove the schedule if it exists
-  content = clean_schedule(content);
 
   switch (true) {
     case content.includes("@from"): {
