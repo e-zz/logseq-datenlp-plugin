@@ -9,7 +9,6 @@ import {
   checkIfUrl,
   inlineParsing,
 } from "~/features/parse/index";
-import { PluginSettings } from "~/settings/types";
 
 export const manualParse = (
   flag: string,
@@ -18,12 +17,8 @@ export const manualParse = (
   parsedText: string,
   parsedStart: Date,
 ): string => {
-  const { dateChar, scheduledChar, deadlineChar } =
-    logseq.settings! as Partial<PluginSettings>;
-  if (!dateChar || !scheduledChar || !deadlineChar) throw new Error();
-
-  switch (true) {
-    case flag === dateChar: {
+  switch (flag) {
+    case "manual-date": {
       if (!logseq.settings!.insertDateProperty) {
         const checkTime = checkIfChronoObjHasTime(chronoBlock[0]!.start);
         content = content.replace(
@@ -41,20 +36,20 @@ date:: ${getDateForPage(parsedStart, logseq.settings!.preferredDateFormat)}`;
         return content;
       }
     }
-    case flag === scheduledChar: {
+    case "manual-scheduled": {
       if (checkIfUrl(content)) return ""; // Don't parse URLs
       const checkTime = checkIfChronoObjHasTime(chronoBlock[0]!.start);
       content = content.replace(parsedText, "");
       content = `${content}
-SCHEDULED: <${getScheduledDateDay(parsedStart)}${checkTime}>`;
+${getScheduledDateDay(parsedStart)}${checkTime}`;
       return content;
     }
-    case flag === deadlineChar: {
+    case "manual-deadline": {
       if (checkIfUrl(content)) return ""; // Don't parse URLs
       const checkTime = checkIfChronoObjHasTime(chronoBlock[0]!.start);
       content = content.replace(parsedText, "");
       content = `${content}
-DEADLINE: <${getDeadlineDateDay(parsedStart)}${checkTime}>`;
+${getDeadlineDateDay(parsedStart)}${checkTime}`;
       return content;
     }
     default: {
@@ -67,21 +62,21 @@ export const manualParsing = () => {
   logseq.Editor.registerSlashCommand("Parse dates", async (e) => {
     const blk = await logseq.Editor.getBlock(e.uuid);
     if (!blk) return;
-    const content = await inlineParsing(blk, { flag: "@" });
+    const content = await inlineParsing(blk, { flag: "manual-date" });
     if (content) await logseq.Editor.updateBlock(e.uuid, content);
   });
 
   logseq.Editor.registerSlashCommand("Parse scheduled", async (e) => {
     const blk = await logseq.Editor.getBlock(e.uuid);
     if (!blk) return;
-    const content = await inlineParsing(blk, { flag: "%" });
+    const content = await inlineParsing(blk, { flag: "manual-scheduled" });
     if (content) await logseq.Editor.updateBlock(e.uuid, content);
   });
 
   logseq.Editor.registerSlashCommand("Parse deadline", async (e) => {
     const blk = await logseq.Editor.getBlock(e.uuid);
     if (!blk) return;
-    const content = await inlineParsing(blk, { flag: "^" });
+    const content = await inlineParsing(blk, { flag: "manual-deadline" });
     if (content) await logseq.Editor.updateBlock(e.uuid, content);
   });
 };

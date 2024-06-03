@@ -7,6 +7,14 @@ import {
 import { ParsedResult } from "chrono-node";
 import { PluginSettings } from "~/settings/types";
 
+
+
+const insert_at_second_line = (content: string, str: string): string => {
+  const lines = content.split("\n");
+  lines.splice(1, 0, str);
+  return lines.join("\n");
+}
+
 export const semiAutoParse = (
   content: string,
   chronoBlock: ParsedResult[],
@@ -18,7 +26,10 @@ export const semiAutoParse = (
     logseq.settings! as Partial<PluginSettings>;
   if (!dateChar || !scheduledChar || !deadlineChar) throw new Error();
 
-  if (content.startsWith("`") && content.endsWith("`")) return "";
+  // handle special characters in code
+  const backticksRx = /`(.*?)`/g;
+  if (backticksRx.exec(content)) return "";
+  
 
   switch (true) {
     case content.includes("@from"): {
@@ -53,11 +64,9 @@ export const semiAutoParse = (
         parsedStart = new Date(parsedStart.setHours(0, 0, 0, 0));
 
       if (scheduledOrDeadline === "SCHEDULED") {
-        content = `${content}
-${getScheduledDateDay(parsedStart)}`;
+        content = insert_at_second_line(content, getScheduledDateDay(parsedStart));
       } else {
-        content = `${content}
-${getDeadlineDateDay(parsedStart)}`;
+        content = insert_at_second_line(content, getDeadlineDateDay(parsedStart));
       }
       return content;
     }
@@ -73,7 +82,7 @@ const callback = async (mutationsList: MutationRecord[]): Promise<void> => {
       m.type === "childList" &&
       m.removedNodes.length > 0 &&
       (m.removedNodes[0]! as HTMLElement).className ===
-        "editor-inner block-editor"
+      "editor-inner block-editor"
     ) {
       const uuid = (m.target as HTMLElement)
         .closest('div[id^="ls-block"]')
