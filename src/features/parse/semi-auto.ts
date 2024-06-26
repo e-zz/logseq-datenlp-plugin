@@ -57,15 +57,17 @@ export const semiAutoParse = (
       const scheduledOrDeadline = content.includes(scheduledChar)
         ? "SCHEDULED"
         : "DEADLINE";
-      content = content.replace(`${scheduledChar}${parsedText}`, "");
-      content = content.replace(`${deadlineChar}${parsedText}`, "");
-
+        
       if (logseq.settings?.removeTime)
         parsedStart = new Date(parsedStart.setHours(0, 0, 0, 0));
 
       if (scheduledOrDeadline === "SCHEDULED") {
+        content = content.replace(/SCHEDULED:\s<.*\n?/, "");
+        content = content.replace(`${scheduledChar}${parsedText}`, "");  // must be before the next line
         content = insert_at_second_line(content, getScheduledDateDay(parsedStart));
       } else {
+        content = content.replace(/DEADLINE:\s<.*\n?/, "");
+        content = content.replace(`${deadlineChar}${parsedText}`, "");
         content = insert_at_second_line(content, getDeadlineDateDay(parsedStart));
       }
       return content;

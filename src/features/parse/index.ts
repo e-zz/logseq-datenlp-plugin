@@ -29,14 +29,6 @@ export const checkIfChronoObjHasTime = (
   }
 };
 
-const clean_schedule = (content: string): string => {
-  // check the second line and remove it if it is a schedule
-  // SCHEDULED: <2021-09-01 Wed>
-  // DEADLINE: <2021-09-01 Wed>
-  // use regex to match the line starting with SCHEDULED or DEADLINE, including the line break
-  const regex = /SCHEDULED:\s<.*\n?|DEADLINE:\s<.*\n?/
-  return content.replace(regex, "");
-}
 
 const handleMultipleParsedText = (
   chronoBlock: ParsedResult[],
@@ -98,8 +90,6 @@ export const inlineParsing = async (
   options?: { flag: string },
 ): Promise<string | undefined> => {
   var { content } = currBlock;
-  // remove the schedule if it exists
-  content = clean_schedule(content);
 
   //@ts-ignore
   const chronoBlock: ParsedResult[] = chrono[logseq.settings!.lang].parse(
