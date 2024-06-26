@@ -3,6 +3,7 @@ import { ParsedResult } from "chrono-node/dist/cjs";
 import * as chrono from "chrono-node";
 import { semiAutoParse } from "~/features/parse/semi-auto";
 import { manualParse } from "~/features/parse/manual";
+import { parse } from "path";
 
 export const checkIfUrl = (str: string): boolean => {
   switch (true) {
@@ -85,6 +86,15 @@ const handleMultipleParsedText = (
   return parsedStr;
 };
 
+const clean_schedule = (content: string): string => {
+  // check the second line and remove it if it is a schedule
+  // SCHEDULED: <2021-09-01 Wed>
+  // DEADLINE: <2021-09-01 Wed>
+  // use regex to match the line starting with SCHEDULED or DEADLINE, including the line break
+  const regex = /SCHEDULED:\s<.*\n?|DEADLINE:\s<.*\n?/g
+  return content.replace(regex, "");
+}
+
 export const inlineParsing = async (
   currBlock: BlockEntity,
   options?: { flag: string },
@@ -93,7 +103,7 @@ export const inlineParsing = async (
 
   //@ts-ignore
   const chronoBlock: ParsedResult[] = chrono[logseq.settings!.lang].parse(
-    content,
+    clean_schedule(content),
     new Date(),
   );
   if (!chronoBlock || !chronoBlock[0]) return "";
